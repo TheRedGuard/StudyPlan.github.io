@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>School Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f4f0; --surface: #ffffff; --surface2: #f0efe9;
+    --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.18);
+    --text: #1a1a18; --text2: #6b6b65; --text3: #a0a09a;
+    --accent: #2d6a4f; --accent-light: #d8f3dc; --accent-text: #1b4332;
+    --danger: #c0392b; --danger-light: #fdecea;
+    --warning: #b7620a; --warning-light: #fef3e2;
+    --info: #1a5276; --info-light: #e8f4fd;
+    --radius: 10px; --radius-lg: 14px;
+    --font: 'DM Sans', sans-serif; --font-mono: 'DM Mono', monospace;
+  }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 15px; }
+  .container { max-width: 680px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+  .app-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; }
+  .app-header h1 { font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .app-header h1 i { color: var(--accent); }
+  #today-date { font-size: 13px; color: var(--text2); font-family: var(--font-mono); }
+
+  .tabs { display: flex; gap: 4px; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 4px; margin-bottom: 1.5rem; }
+  .tab { flex: 1; padding: 9px 8px; text-align: center; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 7px; border: none; background: transparent; color: var(--text2); font-family: var(--font); transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  .tab.active { background: var(--bg); color: var(--text); border: 0.5px solid var(--border2); }
+  .tab:hover:not(.active) { background: var(--surface2); }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; margin-bottom: 1rem; }
+
+  input, select, textarea { width: 100%; padding: 9px 12px; font-size: 14px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-family: var(--font); outline: none; transition: border-color 0.15s; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); background: #fff; }
+  textarea { resize: vertical; min-height: 70px; line-height: 1.6; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .form-grid.full { grid-template-columns: 1fr; }
+  .form-label { font-size: 12px; color: var(--text2); margin-bottom: 4px; display: block; font-weight: 500; }
+
+  .btn { padding: 9px 18px; font-size: 13px; font-weight: 500; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; color: var(--text); cursor: pointer; font-family: var(--font); display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+  .btn:hover { background: var(--surface2); }
+  .btn:active { transform: scale(0.98); }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover { background: #245c44; }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+  /* Task cards with subject color left border */
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+  .task-card { background: var(--surface); border: 0.5px solid var(--border); border-left-width: 3px; border-radius: var(--radius-lg); padding: 12px 1rem; transition: border-color 0.15s; }
+  .task-card:hover { border-color: var(--border2); border-left-color: inherit; }
+  .task-header { display: flex; align-items: center; gap: 10px; }
+  .task-check { width: 20px; height: 20px; border: 1.5px solid var(--border2); border-radius: 6px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .task-check:hover { border-color: var(--accent); }
+  .task-check.done { border-color: currentColor; }
+  .task-title { font-size: 14px; font-weight: 500; color: var(--text); flex: 1; }
+  .task-title.done { text-decoration: line-through; color: var(--text3); }
+  .task-meta { display: flex; gap: 6px; margin-top: 7px; margin-left: 30px; flex-wrap: wrap; align-items: center; }
+  .icon-btn { border: none; background: transparent; cursor: pointer; color: var(--text3); padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+  .icon-btn:hover { background: var(--danger-light); color: var(--danger); }
+
+  .badge { font-size: 11px; padding: 3px 9px; border-radius: 99px; font-weight: 500; letter-spacing: 0.01em; }
+  .badge.type { background: var(--surface2); color: var(--text2); border: 0.5px solid var(--border); }
+  .badge.urgent { background: var(--danger-light); color: var(--danger); }
+  .badge.soon { background: var(--warning-light); color: var(--warning); }
+  .badge.ok { background: var(--accent-light); color: var(--accent-text); }
+
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--text3); font-size: 14px; }
+  .empty i { font-size: 36px; display: block; margin-bottom: 10px; }
+
+  .ai-output { font-size: 14px; color: var(--text); line-height: 1.75; white-space: pre-wrap; min-height: 60px; }
+  .ai-placeholder { color: var(--text3); }
+
+  .api-notice { background: var(--warning-light); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; font-size: 13px; color: var(--warning); margin-bottom: 1rem; display: none; }
+  .api-notice a { color: var(--warning); }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Subject groups */
+  .subject-group { margin-bottom: 1.5rem; }
+  .subject-group-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 10px 14px; border-radius: var(--radius-lg); }
+  .subject-group-title { font-size: 15px; font-weight: 600; flex: 1; }
+  .subject-count { font-size: 12px; font-family: var(--font-mono); opacity: 0.7; }
+  .subject-row { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--surface); border: 0.5px solid var(--border); border-left-width: 3px; border-radius: var(--radius); margin-bottom: 5px; transition: border-color 0.15s; }
+  .subject-row:hover { border-color: var(--border2); border-left-color: inherit; }
+  .subject-row-title { font-size: 14px; font-weight: 500; color: var(--text); flex: 1; }
+  .subject-row-title.done { text-decoration: line-through; color: var(--text3); }
+  .subject-row-meta { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+  .subject-row-due { font-size: 12px; color: var(--text2); font-family: var(--font-mono); }
+
+  /* Color picker row in By Subject */
+  .color-editor { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 1.25rem; }
+  .color-chip { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 0.5px solid var(--border); border-radius: 99px; padding: 5px 12px 5px 6px; font-size: 13px; font-weight: 500; }
+  .color-chip input[type=color] { width: 22px; height: 22px; border: none; border-radius: 50%; padding: 0; background: none; cursor: pointer; }
+
+  @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="app-header">
+    <h1><i class="ti ti-book-2"></i> School Planner</h1>
+    <span id="today-date"></span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('tasks', this)">
+      <i class="ti ti-checklist"></i> Tasks
+    </button>
+    <button class="tab" onclick="switchTab('subjects', this)">
+      <i class="ti ti-layout-list"></i> By Subject
+    </button>
+    <button class="tab" onclick="switchTab('study', this)">
+      <i class="ti ti-brain"></i> AI Study
+    </button>
+  </div>
+
+  <!-- TASKS -->
+  <div id="tab-tasks" class="section active">
+    <div class="card">
+      <div class="form-grid">
+        <div>
+          <label class="form-label">Title</label>
+          <input id="task-title" placeholder="Assignment title" />
+        </div>
+        <div>
+          <label class="form-label">Subject</label>
+          <select id="task-subject">
+            <option value="">Select subject...</option>
+            <option>Math</option><option>Science</option><option>English</option>
+            <option>History</option><option>Language</option><option>Art</option><option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid">
+        <div>
+          <label class="form-label">Type</label>
+          <select id="task-type">
+            <option value="">Select type...</option>
+            <option>Homework</option><option>Exam</option><option>Project</option>
+            <option>Reading</option><option>Essay</option><option>Quiz</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Due date</label>
+          <input id="task-due" type="date" />
+        </div>
+      </div>
+      <div class="form-grid full" style="margin-bottom:12px;">
+        <div>
+          <label class="form-label">Notes (optional)</label>
+          <input id="task-notes" placeholder="Any extra details..." />
+        </div>
+      </div>
+      <button class="btn primary" onclick="addTask()">
+        <i class="ti ti-plus"></i> Add task
+      </button>
+    </div>
+
+  </div>
+
+  <!-- BY SUBJECT -->
+  <div id="tab-subjects" class="section">
+    <div class="card" style="margin-bottom:1rem;">
+      <div class="section-title" style="margin-bottom:8px;">Subject colors</div>
+      <div class="color-editor" id="color-editor"></div>
+    </div>
+    <div id="subject-list">
+      <div class="empty" id="subject-empty-msg">
+        <i class="ti ti-books"></i>
+        No pending tasks — add some in the Tasks tab
+      </div>
+    </div>
+  </div>
+
+  <!-- AI STUDY -->
+  <div id="tab-study" class="section">
+    <div class="api-notice" id="api-notice">
+      AI features require an Anthropic API key. Add it below.
+      <a href="https://console.anthropic.com/keys" target="_blank">Get a free key →</a>
+    </div>
+    <div class="card" style="margin-bottom:0.75rem;">
+      <label class="form-label">Anthropic API Key (stored locally)</label>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input id="api-key" type="password" placeholder="sk-ant-..." style="flex:1;" />
+        <button class="btn" onclick="saveKey()"><i class="ti ti-device-floppy"></i> Save</button>
+      </div>
+      <label class="form-label">Ask the AI tutor</label>
+      <textarea id="ai-question" placeholder="e.g. Explain photosynthesis simply, make me 5 quiz questions about WW2, help me outline my essay on climate change..."></textarea>
+      <div class="btn-row">
+        <button class="btn primary" onclick="askAI()"><i class="ti ti-sparkles"></i> Ask</button>
+        <button class="btn" onclick="setQ('Make me 5 quiz questions on: ')">Quiz me</button>
+        <button class="btn" onclick="setQ('Give me a study plan for today')">Today's plan</button>
+        <button class="btn" onclick="setQ('Explain step by step: ')">Explain topic</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Response</div>
+      <div class="ai-output" id="ai-output">
+        <span class="ai-placeholder">Your AI tutor's response will appear here...</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── State ──
+let tasks = JSON.parse(localStorage.getItem('sp_tasks') || '[]');
+let apiKey = localStorage.getItem('sp_apikey') || '';
+
+const DEFAULT_COLORS = {
+  'Math':     '#e67e22',
+  'Science':  '#27ae60',
+  'English':  '#2980b9',
+  'History':  '#8e44ad',
+  'Language': '#c0392b',
+  'Art':      '#d4357a',
+  'Other':    '#7f8c8d'
+};
+let subjectColors = Object.assign({}, DEFAULT_COLORS, JSON.parse(localStorage.getItem('sp_colors') || '{}'));
+
+function saveColors() { localStorage.setItem('sp_colors', JSON.stringify(subjectColors)); }
+function getColor(s) { return subjectColors[s] || '#888888'; }
+function colorBg(hex, alpha) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+document.getElementById('today-date').textContent =
+  new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+if (apiKey) document.getElementById('api-key').value = apiKey;
+
+// ── Tabs ──
+function switchTab(name, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+  if (name === 'subjects') { renderColorEditor(); renderSubjects(); }
+}
+
+// ── Color editor ──
+function renderColorEditor() {
+  const used = new Set(tasks.map(t => t.subject).filter(Boolean));
+  Object.keys(DEFAULT_COLORS).forEach(s => used.add(s));
+  const subjects = [...used].sort();
+  const editor = document.getElementById('color-editor');
+  editor.innerHTML = subjects.map(s => {
+    const c = getColor(s);
+    return `<div class="color-chip" style="border-color:${c}44;">
+      <input type="color" value="${c}" oninput="updateColor('${s}', this.value)" title="Change color for ${s}" />
+      <span style="color:${c}">${s}</span>
+    </div>`;
+  }).join('');
+}
+
+function updateColor(subject, color) {
+  subjectColors[subject] = color;
+  saveColors();
+  renderColorEditor();
+  renderSubjects();
+}
+
+// ── Utilities ──
+function saveTasks() { localStorage.setItem('sp_tasks', JSON.stringify(tasks)); }
+
+function getDaysDiff(due) {
+  if (!due) return null;
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.round((new Date(due + 'T00:00:00') - now) / 86400000);
+}
+
+function urgencyBadge(due, done) {
+  if (done || !due) return '';
+  const d = getDaysDiff(due);
+  if (d < 0) return '<span class="badge urgent">Overdue</span>';
+  if (d === 0) return '<span class="badge urgent">Today</span>';
+  if (d === 1) return '<span class="badge soon">Tomorrow</span>';
+  if (d <= 3) return '<span class="badge soon">In ' + d + ' days</span>';
+  return '<span class="badge ok">In ' + d + ' days</span>';
+}
+
+const TRASH = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>`;
+
+// ── Render by subject (the only task list view) ──
+function renderSubjects() {
+  const container = document.getElementById('subject-list');
+  const emptyMsg = document.getElementById('subject-empty-msg');
+
+  // Remove old groups
+  Array.from(container.children).forEach(el => {
+    if (!el.id) el.remove();
+  });
+
+  const pending = tasks.filter(t => !t.done).sort((a,b) => {
+    if (!a.due && !b.due) return 0;
+    if (!a.due) return 1; if (!b.due) return -1;
+    return new Date(a.due) - new Date(b.due);
+  });
+  const done = tasks.filter(t => t.done);
+  const all = [...pending, ...done];
+
+  if (!all.length) { emptyMsg.style.display = 'block'; return; }
+  emptyMsg.style.display = 'none';
+
+  // Group by subject
+  const groups = {};
+  all.forEach(t => {
+    const s = t.subject || 'No subject';
+    if (!groups[s]) groups[s] = [];
+    groups[s].push(t);
+  });
+
+  // Sort subjects alphabetically, No subject last
+  const subjectNames = Object.keys(groups).sort((a,b) => {
+    if (a === 'No subject') return 1;
+    if (b === 'No subject') return -1;
+    return a.localeCompare(b);
+  });
+
+  subjectNames.forEach(subj => {
+    const color = subj === 'No subject' ? '#888888' : getColor(subj);
+    const rows = groups[subj].map(t => {
+      const idx = tasks.indexOf(t);
+      const dueStr = t.due ? new Date(t.due+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+      const d = getDaysDiff(t.due);
+      let urgClass='', urgLabel='';
+      if (!t.done && t.due && d !== null) {
+        if (d < 0)      { urgClass='urgent'; urgLabel='Overdue'; }
+        else if (d===0) { urgClass='urgent'; urgLabel='Today'; }
+        else if (d===1) { urgClass='soon';   urgLabel='Tomorrow'; }
+        else if (d<=3)  { urgClass='soon';   urgLabel='In '+d+'d'; }
+      }
+      const checkBg = t.done ? `background:${color};border-color:${color};` : `border-color:${color};`;
+      return `<div class="subject-row" style="border-left-color:${color};">
+        <div class="task-check ${t.done?'done':''}" onclick="toggleDone(${idx})" style="${checkBg}" role="checkbox" aria-checked="${t.done}" tabindex="0">
+          ${t.done ? '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' : ''}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div class="subject-row-title ${t.done?'done':''}">${t.title}</div>
+          ${t.notes ? `<div style="font-size:12px;color:var(--text2);margin-top:2px;">${t.notes}</div>` : ''}
+        </div>
+        <div class="subject-row-meta">
+          ${dueStr ? `<span class="subject-row-due">${dueStr}</span>` : ''}
+          ${urgLabel ? `<span class="badge ${urgClass}">${urgLabel}</span>` : ''}
+          ${t.type ? `<span class="badge type">${t.type}</span>` : ''}
+          <button class="icon-btn" onclick="deleteTask(${idx})" aria-label="Delete">${TRASH}</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    const groupEl = document.createElement('div');
+    groupEl.className = 'subject-group';
+    groupEl.innerHTML = `
+      <div class="subject-group-header" style="background:${colorBg(color,0.1)};border-left:3px solid ${color};">
+        <span class="subject-group-title" style="color:${color};">${subj}</span>
+        <span class="subject-count" style="color:${color};">${groups[subj].length} task${groups[subj].length!==1?'s':''}</span>
+      </div>
+      ${rows}`;
+    container.appendChild(groupEl);
+  });
+}
+
+// ── Add / toggle / delete ──
+function addTask() {
+  const title = document.getElementById('task-title').value.trim();
+  if (!title) { document.getElementById('task-title').focus(); return; }
+  tasks.push({
+    title,
+    subject: document.getElementById('task-subject').value,
+    type:    document.getElementById('task-type').value,
+    due:     document.getElementById('task-due').value,
+    notes:   document.getElementById('task-notes').value.trim(),
+    done:    false,
+    id:      Date.now()
+  });
+  saveTasks();
+  // Switch to By Subject tab to show the new task
+  const subjTab = document.querySelector('[onclick="switchTab('subjects', this)"]');
+  switchTab('subjects', subjTab);
+  ['task-title','task-notes'].forEach(id => document.getElementById(id).value = '');
+  ['task-subject','task-type'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('task-due').value = '';
+}
+
+function toggleDone(i) {
+  tasks[i].done = !tasks[i].done;
+  saveTasks();
+  renderSubjects();
+}
+
+function deleteTask(i) {
+  tasks.splice(i, 1);
+  saveTasks();
+  renderSubjects();
+}
+
+// ── API key ──
+function saveKey() {
+  apiKey = document.getElementById('api-key').value.trim();
+  localStorage.setItem('sp_apikey', apiKey);
+  document.getElementById('api-notice').style.display = 'none';
+  alert('API key saved!');
+}
+
+// ── Claude API ──
+async function callClaude(prompt) {
+  if (!apiKey) { document.getElementById('api-notice').style.display='block'; return 'Please add your Anthropic API key above.'; }
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'x-api-key':apiKey, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+    body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000,
+      system:'You are a friendly, concise school study assistant. Give practical, clear responses. Use short paragraphs or numbered lists. No markdown headers.',
+      messages:[{role:'user',content:prompt}] })
+  });
+  const data = await res.json();
+  if (data.error) return 'Error: ' + data.error.message;
+  return data.content?.map(c=>c.text||'').join('') || 'No response.';
+}
+
+async function askAI() {
+  const q = document.getElementById('ai-question').value.trim();
+  if (!q) return;
+  const out = document.getElementById('ai-output');
+  out.innerHTML = '<span class="ai-placeholder" style="display:flex;align-items:center;gap:8px;"><svg style="animation:spin 1s linear infinite" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Thinking...</span>';
+  const taskCtx = tasks.filter(t=>!t.done).map(t=>`${t.title}${t.due?' (due '+t.due+')':''}`).join(', ');
+  out.textContent = await callClaude(q + (taskCtx ? '\n\nMy tasks: '+taskCtx : ''));
+}
+
+function setQ(text) {
+  document.querySelector('[onclick="switchTab('study', this)"]').click();
+  document.getElementById('ai-question').value = text;
+  document.getElementById('ai-question').focus();
+}
+
+document.getElementById('task-title').addEventListener('keydown', e => { if (e.key==='Enter') addTask(); });
+@keyframes spin { to { transform: rotate(360deg); } }
+</script>
+</body>
+</html>
